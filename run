@@ -1,59 +1,214 @@
 <?php 
 require "config/Connection.php";
+require "vendor/zframework/Migration.php";
+require "vendor/zframework/Generator.php";
 use config\Connection;
+use vendor\zframework\Migration;
+use vendor\zframework\Generator;
 // z framework development started
 // z framework set default port
 $port = "8080";
+$command = "";
 
 // count command line arguments
 $num_of_arg = count($argv);
-if($num_of_arg > 1)
+if($num_of_arg == 1)
 {
-	// set port from arguments
-	$_port = $argv[1];
-	$_port = explode("=", $_port);
-	if(empty($_port)) exit;
-	if($_port[0] == "--port")
-		$port = $_port[1];
-	if($_port[0] == "migration")
+	echo "Z-Framework Development Started at $port\n";
+	$cmd = "php -S localhost:".$port." -t main/";
+	shell_exec($cmd);
+	die();
+}
+
+if($num_of_arg > 2)
+{
+	$command = $argv[1];
+}
+
+if($command == "serve")
+{
+	if(isset($argv[2]))
+	{
+		$_port = $argv[2];
+		$_port = explode("=", $_port);
+		if($_port[0] == "--port")
+		{
+			$port = $_port[1];
+		}
+	}
+}
+
+if($command == "migration")
+{
+	if(isset($argv[2]))
 	{
 		$connection = new Connection();
 		$mysql = new mysqli($connection->host,$connection->username,$connection->password,$connection->database);
+
+		// check migrations table
 		$tables = "SHOW tables FROM ".$connection->database;
 		$tables = $mysql->query($tables);
 		$tables = $tables->fetch_all(MYSQLI_ASSOC);
-		foreach ($tables as $key => $value) {
-			$tableName = $value['Tables_in_'.$connection->database];
-			$backup_file = "migrations/".$tableName.".json";
-			if($_port[1] == "create_table"){
-			}elseif($_port[1] == "export"){
-				$query = "SELECT * FROM $tableName";
-				$query = $mysql->query($query);
-				$data = json_encode($query->fetch_all(MYSQLI_ASSOC));
-				file_put_contents($backup_file, $data);
-			}elseif($_port[1] == "import"){
-				if(file_exists($backup_file))
+		
+		if(empty($tables))
+		{
+			$create_migration = [
+				"action" => "create",
+				"table_name" => "migrations",
+				"fields" => [
+					[
+						"name" => "id",
+						"data_type" => "int",
+						"default" => "auto_increment"
+					],
+					[
+						"name" => "file_name",
+						"data_type" => "varchar",
+						"length" => 255
+					]
+				],
+				"primary_key" => "id"
+			];
+			$create_migration = json_encode($create_migration);
+			$migration = new Migration($create_migration);
+			$migration = $migration->parseToQuery();
+			$mysql->query($migration);
+		}
+		else
+		{
+			// print_r($result->fetch_all(MYSQLI_ASSOC));
+			// die();
+		}
+		$command_parameter = $argv[2];
+		if($command_parameter == "table")
+		{
+			// create or alter table
+			if(isset($argv[3]) && $argv[3] == "--fresh")
+			{
+				$mysql->query("TRUNCATE TABLE migrations");
+			}
+			$table_files = glob("migrations/tables/*.json");
+			foreach ($table_files as $value) {
+				$file_name = str_replace("migrations/tables/","",$value);
+				$sql = "SELECT * FROM migrations WHERE file_name='".$file_name."'";
+				$result = $mysql->query($sql);
+				if(!$result->num_rows)
 				{
-					$data = file_get_contents($backup_file);
-					$data = json_decode($data);
-					foreach ($data as $rows) {
-						$set = "";
-						$values = "";
-						foreach ($rows as $k => $row) {
-							$set .= $k.",";
-							$values .= "'".$row."',";
-						}
-						$set = rtrim($set,",");
-						$values = rtrim($values,",");
-						$insert = "INSERT INTO $tableName ($set) VALUES ($values)";
-						$mysql->query($insert);
+					echo "Migration : ".$file_name." Created\n";
+					$file_contents = file_get_contents($value);
+					$migration = new Migration($file_contents);
+					if(isset($argv[3]) && $argv[3] == "--fresh")
+					{
+						$mysql->query("Set foreign_key_checks = 0");
+						$mysql->query($migration->drop());
+						$mysql->query("Set foreign_key_checks = 1");
 					}
+					
+					if($mysql->query($migration->parseToQuery()) === false){
+						print_r($mysql->error);
+						echo "\n";
+					}
+					$mysql->query("INSERT INTO migrations(file_name)VALUES('".$file_name."')");
+					echo "Migration : ".$file_name." Succeded\n";
 				}
+			}
+		}
+
+		if($command_parameter == "seed")
+		{
+			// seed database
+			$seeder_files = glob("migrations/seeds/*.json");
+			foreach ($seeder_files as $value) {
+				$file_name = str_replace("migrations/seeds/","",$value);
+				echo "Database Seed : ".$file_name." Created\n";
+				$file_contents = file_get_contents($value);
+				$migration = new Migration($file_contents);
+				if(isset($argv[3]) && $argv[3] == "--fresh")
+				{
+					$mysql->query($migration->clean());
+					$mysql->query($migration->parseToSeederQuery());
+				}
+				else
+					$mysql->query($migration->parseToSeederQuery());
+				echo "Database Seed : ".$file_name." Succeded\n";
 			}
 		}
 		die();
 	}
 }
+
+if($command == "database")
+{
+	$connection = new Connection();
+	$mysql = new mysqli($connection->host,$connection->username,$connection->password,$connection->database);
+	$tables = "SHOW tables FROM ".$connection->database;
+	$tables = $mysql->query($tables);
+	$tables = $tables->fetch_all(MYSQLI_ASSOC);
+	$command_parameter = isset($argv[2]) ? $argv[2] : "";
+	foreach ($tables as $key => $value) {
+		$tableName = $value['Tables_in_'.$connection->database];
+		$backup_file = "database/".$tableName.".json";
+		if($command_parameter == "export")
+		{
+			$query = "SELECT * FROM $tableName";
+			$query = $mysql->query($query);
+			$data = json_encode($query->fetch_all(MYSQLI_ASSOC));
+			file_put_contents($backup_file, $data);
+		}
+		elseif($command_parameter == "import")
+		{
+			if(file_exists($backup_file))
+			{
+				$data = file_get_contents($backup_file);
+				$data = json_decode($data);
+				foreach ($data as $rows) {
+					$set = "";
+					$values = "";
+					foreach ($rows as $k => $row) {
+						$set .= $k.",";
+						$values .= "'".$row."',";
+					}
+					$set = rtrim($set,",");
+					$values = rtrim($values,",");
+					$insert = "INSERT INTO $tableName ($set) VALUES ($values)";
+					$mysql->query($insert);
+				}
+			}
+		}
+	}
+	die();
+}
+
+if($command == "tools")
+{
+	$command_parameter = isset($argv[2]) ? $argv[2] : "";
+	if(!empty($command_parameter))
+	{
+		if($command_parameter == "create:model")
+		{
+			$table_files = glob("migrations/tables/*.json");
+			foreach ($table_files as $value) {
+				$file_contents = file_get_contents($value);
+				$generator = new Generator($file_contents);
+				echo "Generate Model : ".$generator->table_name." Started\n";
+				$generator->generateModel();
+				echo "Generate Model : ".$generator->table_name." Finished\n";
+			}
+		}
+
+		if($command_parameter == "create:controller")
+		{
+			$controller_name = $argv[3];
+			$generator = new Generator("");
+			$generator->generateController($controller_name);
+			echo "Generate Controller : ".$controller_name." Finished\n";
+		}
+	}
+
+	die();
+}
+
 echo "Z-Framework Development Started at $port\n";
 $cmd = "php -S localhost:".$port." -t main/";
 shell_exec($cmd);
+die();

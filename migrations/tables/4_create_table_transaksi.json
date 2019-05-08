@@ -1,0 +1,50 @@
+	{
+		"action": "create",
+		"table_name" : "transaksi",
+		"fields" : [
+			{
+				"name":"id",
+				"data_type":"int",
+				"length":11,
+				"default":"auto_increment"
+			},
+			{
+				"name":"produk_id",
+				"data_type":"int",
+				"length":11
+			},
+			{
+				"name":"customer_id",
+				"data_type":"int",
+				"length":11
+			},
+			{
+				"name":"jumlah",
+				"data_type":"int",
+				"length":11
+			}
+		],
+		"primary_key" : "id",
+		"foreign_key" : [
+			{
+				"field_name":"produk_id",
+				"references":"produk",
+				"references_field":"id",
+				"event":
+					{
+						"delete":"cascade",
+						"update":"no action"
+					}
+			},
+			{
+				"field_name":"customer_id",
+				"references":"customers",
+				"references_field":"id",
+				"event":
+					{
+						"delete":"cascade",
+						"update":"no action"
+					}
+			}
+		]
+	}

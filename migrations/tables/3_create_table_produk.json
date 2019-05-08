@@ -1,0 +1,44 @@
+	{
+		"action": "create",
+		"table_name" : "produk",
+		"fields" : [
+			{
+				"name":"id",
+				"data_type":"int",
+				"length":11,
+				"default":"auto_increment"
+			},
+			{
+				"name":"kategori_id",
+				"data_type":"int",
+				"length":11
+			},
+			{
+				"name":"nama",
+				"data_type":"varchar",
+				"length":255
+			},
+			{
+				"name":"deskripsi",
+				"data_type":"text"
+			},
+			{
+				"name":"harga",
+				"data_type":"varchar",
+				"length":11
+			}
+		],
+		"primary_key" : "id",
+		"foreign_key" : [
+			{
+				"field_name":"kategori_id",
+				"references":"kategori",
+				"references_field":"id",
+				"event":
+					{
+						"delete":"cascade",
+						"update":"no action"
+					}
+			}
+		]
+	}

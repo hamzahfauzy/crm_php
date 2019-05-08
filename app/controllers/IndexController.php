@@ -14,28 +14,29 @@ class IndexController extends Controller
 
 	function index()
 	{
-		echo "Your Successfully install z-framework";
+		return $this->view->render("index");
 	}
 
-	function posthandle(Request $request)
+	function login()
 	{
-		print_r($request);
+		$error = isset($_GET['error']) ? $_GET['error'] : '';
+		$data["error"] = $error;
+		return $this->view->render("login")->with($data);
 	}
 
-	function hello()
+	function doLogin(Request $request)
 	{
-		echo "Hello World";
-	}
-
-	function user($id)
-	{
-		$user = User::get();
-		return $this->view->render("detail")->with("users",$user);
-	}
-
-	function tryparam($param)
-	{
-		echo $param;
+		$user = User::where("username",$request->username)->where("password",md5($request->password))->first();
+		if(!empty($user))
+		{
+			Session::set("id",$user->id);
+			$this->redirect()->url("/admin");
+			return;
+		}
+		else
+		{
+			$this->redirect()->url("/?error=invalid");
+		}
 	}
 
 	function logout()

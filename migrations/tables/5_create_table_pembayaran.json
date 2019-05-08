@@ -1,0 +1,40 @@
+	{
+		"action": "create",
+		"table_name" : "pembayaran",
+		"fields" : [
+			{
+				"name":"id",
+				"data_type":"int",
+				"length":11,
+				"default":"auto_increment"
+			},
+			{
+				"name":"transaksi_id",
+				"data_type":"int",
+				"length":11
+			},
+			{
+				"name":"jumlah",
+				"data_type":"int",
+				"length":11
+			},
+			{
+				"name":"status",
+				"data_type":"varchar",
+				"length":20
+			}
+		],
+		"primary_key" : "id",
+		"foreign_key" : [
+			{
+				"field_name":"transaksi_id",
+				"references":"transaksi",
+				"references_field":"id",
+				"event":
+					{
+						"delete":"cascade",
+						"update":"no action"
+					}
+			}
+		]
+	}

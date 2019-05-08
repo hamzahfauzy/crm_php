@@ -1,0 +1,38 @@
+	{
+		"action": "create",
+		"table_name" : "customers",
+		"fields" : [
+			{
+				"name":"id",
+				"data_type":"int",
+				"length":11,
+				"default":"auto_increment"
+			},
+			{
+				"name":"NIK",
+				"data_type":"varchar",
+				"length":30
+			},
+			{
+				"name":"nama",
+				"data_type":"varchar",
+				"length":255
+			},
+			{
+				"name":"alamat",
+				"data_type":"varchar",
+				"length":255
+			},
+			{
+				"name":"email",
+				"data_type":"varchar",
+				"length":50
+			},
+			{
+				"name":"jenis_kelamin",
+				"data_type":"varchar",
+				"length":15
+			}
+		],
+		"primary_key" : "id"
+	}
