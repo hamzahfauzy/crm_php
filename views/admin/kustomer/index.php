@@ -26,7 +26,9 @@
 						<td>
 							<?= $rs->nama ?><br>
 							NIK : <i><?= $rs->NIK ?></i><br>
-							E-Mail : <i class="text-danger"><?= $rs->email ?></i>
+							E-Mail : <i class="text-danger"><?= $rs->email ?></i><br>
+							<?php //print_r($rs->transactions()) ?>
+							Jumlah Transaksi : <?= count($rs->transactions()) ?>
 						</td>
 						<td>
 							<a href="<?= base_url() ?>/admin/customer/edit/<?=$rs->id?>" class="btn btn-sm btn-success"><i class="fa fa-pencil-alt"></i></a>

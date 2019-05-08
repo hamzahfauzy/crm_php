@@ -9,6 +9,6 @@ class Customers extends Model
 
 	public function transactions()
 	{
-		return $this->hasOne(Transaksi::class,['customer_id' => 'id']);
+		return $this->hasMany(Transaksi::class,['customer_id' => 'id']);
 	}
 }

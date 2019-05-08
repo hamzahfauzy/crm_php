@@ -9,7 +9,7 @@ class Transaksi extends Model
 
 	function customer()
 	{
-		return $this->hasOne(Customer::class,['id'=>'customer_id']);
+		return $this->hasOne(Customers::class,['id'=>'customer_id']);
 	}
 
 	function produk()

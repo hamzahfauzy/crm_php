@@ -59,10 +59,10 @@
         <a class="nav-link" href="<?= base_url() ?>/admin/transaksi">
           <i class="fas fa-handshake"></i> Transaksi</a>
       </li>
-      <li class="nav-item <?= get_page() == 'Payment' ? 'active' : '' ?>">
+      <!-- <li class="nav-item <?= get_page() == 'Payment' ? 'active' : '' ?>">
         <a class="nav-link" href="<?= base_url() ?>/admin/payment">
           <i class="fas fa-dollar-sign"></i> Pembayaran</a>
-      </li>
+      </li> -->
       <li class="nav-item <?= get_page() == 'Tentang' ? 'active' : '' ?>">
         <a class="nav-link" href="<?= base_url() ?>/admin/tentang">
           <i class="fas fa-user"></i> Tentang</a>

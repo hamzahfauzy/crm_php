@@ -3,25 +3,33 @@ namespace app\controllers\Admin;
 use vendor\zframework\Controller;
 use vendor\zframework\Session;
 use vendor\zframework\util\Request;
+use app\Customers;
+use app\Produk;
+use app\Transaksi;
 
 class TransaksiController extends Controller
 {
 	function __construct()
 	{
 		parent::__construct();
-		$this->model = new Kategori;
+		$this->model = new Transaksi;
+		$this->produk = new Produk;
+		$this->customers = new Customers;
 	}
 
 	function index()
 	{
 		$model = $this->model->get();
-		return $this->view->render("admin.kategori.index")->with('model',$model);
+		return $this->view->render("admin.transaksi.index")->with('model',$model);
 	}
 
 	function create()
 	{
 		$error = isset($_GET['error']) ? $_GET['error'] : false;
-		return $this->view->render('admin.kategori.create')->with('error',$error);
+		$data["produk"] = $this->produk->get();
+		$data["customers"] = $this->customers->get();
+		$data["error"] = $error;
+		return $this->view->render('admin.transaksi.create')->with($data);
 	}
 
 	function edit(Kategori $id)
@@ -29,46 +37,34 @@ class TransaksiController extends Controller
 		$error = isset($_GET['error']) ? $_GET['error'] : false;
 		$data["error"] = $error;
 		$data["model"] = $id;
-		return $this->view->render('admin.kategori.edit')->with($data);
+		$data["produk"] = $this->produk->get();
+		$data["customers"] = $this->customers->get();
+		return $this->view->render('admin.transaksi.edit')->with($data);
 	}
 
 	function insert(Request $request)
 	{
-		$model = $this->model->where('nama',$request->nama)->first();
-		if(!empty($model))
-		{
-			$this->redirect()->url("/admin/kategori/create?error=exists");
-			return;
-		}
+		$param = (array) $request;
+		$model = new Transaksi;
+		$model->save($param);
 
-		$model = new Kategori;
-		$model->nama = $request->nama;
-		$model->save();
-
-		$this->redirect()->url('/admin/kategori');
+		$this->redirect()->url('/admin/transaksi');
 		return;
 	}
 
 	function update(Request $request)
 	{
-		$model = $this->model->where("nama",$request->nama)->first();
-		if(!empty($model) && $model->id != $request->id)
-		{
-			$this->redirect()->url("/admin/kategori/edit/".$request->id."?error=exists");
-			return;
-		}
-
 		$model = $this->model->where("id",$request->id)->first();
 		$param = (array) $request;
 		if($model->save($param))
-			$this->redirect()->url("/admin/kategori");
+			$this->redirect()->url("/admin/transaksi");
 		return;
 	}
 
 	function delete($id)
 	{
-		Kategori::delete($id);
-		$this->redirect()->url("/admin/kategori");
+		Transaksi::delete($id);
+		$this->redirect()->url("/admin/transaksi");
 		return;
 	}
 
